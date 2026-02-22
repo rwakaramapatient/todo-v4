@@ -3,7 +3,8 @@ console.log(document.body.innerHTML.includes("TODO-APP-PAGE"));
 let input = document.getElementById("input");
 let addBtn = document.getElementById("addBtn");
 let list = document.getElementById("list");
-if (!input || !addBtn ||!list){
+let clear = document.getElementById("Clear");
+if (!input || !addBtn ||!list|| !clear){
     throw new Error("Missing element");
 }
 let todos = JSON.parse(localStorage.getItem("myTodos")) || [];
@@ -36,6 +37,12 @@ todos.forEach(task => {
         saveToDisk();
         render();
       })
+
+clear.addEventListener("click", () => {
+todos = todos.filter(todo =>!todo.done);
+saveToDisk();
+render();
+})
           newItem.appendChild(newButton);
           newItem.appendChild(span);
           newItem.appendChild(dltBtn);
