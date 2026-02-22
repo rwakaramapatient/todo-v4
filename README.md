@@ -1,12 +1,44 @@
+# Week 2 Day 4 — To-Do v2 (Actions + localStorage)
 
-# Week 2 DOM Projects
+## Goal
+Upgrade the To-Do app to use object-based todos, support toggle + delete, and persist data with `localStorage`.
 
-## Day 3 — To-Do (DOM)
-- Add task from input into a list
-- Ignores empty input (trim)
-- Prevents duplicates (includes)
+## Requirements
+- Todos are objects:
+  - `{ text: "sleep", done: false }`
+- Render rules:
+  - done = `☑️` + faded text (`.done`)
+  - not done = `⬜️` + normal
+- Click toggles `done` true/false
+- Delete button removes the todo from state
+- `localStorage`:
+  - load on start
+  - save after add/toggle/delete
+- Guardrail:
+  - HTML contains: `<!-- TODO-APP-PAGE -->`
+  - `app.js` logs:
+    - `console.log("TODO app loaded")`
+    - `console.log(document.body.innerHTML.includes("TODO-APP-PAGE"))`
 
-### How it works
-- `todos` stores tasks as strings
-- `render()` clears the `<ul>` and rebuilds it from `todos`
-- Clicking Add pushes trimmed text → clears input → calls `render()`
+## How to run
+1. Open `index.html` in the browser (or use Live Server).
+2. Open DevTools Console:
+   - You should see:
+     - `TODO app loaded`
+     - `true`
+   - No red errors.
+
+## Features (what works)
+- Add todo (trimmed input, blocks empty)
+- Blocks duplicates (same text)
+- Toggle done (☑️/⬜️)
+- Delete todo
+- Persist todos in `localStorage` under key: `myTodos`
+
+## Data format (localStorage)
+Example:
+```json
+[
+  { "text": "sleep", "done": false },
+  { "text": "code", "done": true }
+]
