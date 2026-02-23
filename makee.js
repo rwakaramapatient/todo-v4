@@ -23,6 +23,13 @@ const saveToDisk = () =>{
 function render() {
 
 let filteredList;
+all.classList.remove("selected");
+active.classList.remove("selected");
+completed.classList.remove("selected");
+
+if (currentFilter === "all") all.classList.add("selected");
+if (currentFilter === "active") active.classList.add("selected");
+if (currentFilter === "completed") completed.classList.add("selected");
 switch (currentFilter) {
     case "active": 
         filteredList = todos.filter(t => t.done !== true);;

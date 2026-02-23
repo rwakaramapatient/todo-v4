@@ -3,3 +3,7 @@
     opacity: 0.5;
     transition: 0.3s;
 }
+.selected {
+  font-weight: bold;
+  text-decoration: underline;
+}
