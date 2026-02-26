@@ -13,7 +13,26 @@ if (!input || !addBtn || !list || !clear || !all || !active || !completed || !st
   throw new Error("Missing element");
 }
 let todos = JSON.parse(localStorage.getItem("myTodos")) || [];
-todos = todos.map(t => (typeof t === "string" ? { text: t, done: false } : t));
+todos = todos.map(t => {
+    if (typeof t === "string") {
+        return { 
+            id: crypto.randomUUID(), 
+            text: t, 
+            done: false, 
+            isEditing: false 
+        };
+    }
+
+        if (!t.id) {
+        t.id = crypto.randomUUID();
+    }
+    
+    if (typeof t.isEditing === "undefined") {
+        t.isEditing = false;
+    }
+
+    return t; 
+});
 
 const saveToDisk = () =>{
    const stringifiedData = JSON.stringify(todos);
@@ -47,31 +66,95 @@ const activeStats = todos.filter(t => !t.done).length;
 stats.textContent = `Total = ${allStats}   Active : ${activeStats}  Completed : ${completedStats}`;   
 list.textContent = "";
 filteredList.forEach(task => {
+const newItem = document.createElement("li");
+        newItem.dataset.id = task.id; 
+    if (task.isEditing){
+        const editInput = document.createElement("input");
+        let isSaving = false;
+const saveEdit = () => {
+    const nextText = editInput.value.trim();
+
+if (nextText === "") {
+  task.isEditing = false;
+  saveToDisk();
+  render();
+  return;
+}
+
+if (todos.some(t => t.id !== task.id && t.text === nextText)) {
+  alert("Already exists!");
+  isSaving = false; // stay in edit mode and allow retry
+  editInput.focus();
+  return;
+}
+
+task.text = nextText;
+task.isEditing = false;
+saveToDisk();
+render();
+}
+
+editInput.addEventListener("keydown",(event) => {
+    if (event.key === "Enter")
+    saveEdit();
+})
+editInput.addEventListener("blur",() => {
+    saveEdit();
+})
+        editInput.value = task.text;
+        editInput.classList.add("edit-input");
+        newItem.appendChild(editInput);
+    }
+    else{
     const newButton = document.createElement("button");
-     const newItem = document.createElement("li");
      const span = document.createElement("span");
      const dltBtn = document.createElement("button");
-    newButton.textContent = task.done ? "☑️" : "⬜️";
+    const editBtn = document.createElement("button");
+    editBtn.textContent = "✏️";
+editBtn.classList.add("btn-edit");
+     newButton.textContent = task.done ? "☑️" : "⬜️";
+    newButton.classList.add("toggle-btn");
     dltBtn.textContent = "del";
+    dltBtn.classList.add("btn-del");
     span.textContent = task.text;
     if (task.done) {
             span.classList.add("done");}
-  newButton.addEventListener("click", () => {
-        task.done = !task.done;
-        saveToDisk();
-        render();
-      })
-      dltBtn.addEventListener("click", () => {
-        todos = todos.filter(t => t !== task);
-        saveToDisk();
-        render();
-      })
-          newItem.appendChild(newButton);
+            newItem.dataset.id = task.id;
+  newItem.appendChild(newButton);
           newItem.appendChild(span);
+          newItem.appendChild(editBtn);
           newItem.appendChild(dltBtn);
-    list.appendChild(newItem);
-}); 
+    }
+          list.appendChild(newItem);
+}); }
+list.addEventListener("click",(event) => {
+    let hasChanged = false;
+    const li = event.target.closest("li");
+    if (!li) return; // Exit if we didn't click an item
+    const id = li.dataset.id;
+    if (event.target.classList.contains("btn-del")){
+        todos = todos.filter(todo => todo.id !== id);
+    hasChanged = true;
+    }
+    if (event.target.classList.contains("toggle-btn")){
+        const todo = todos.find(t => t.id === id);
+        if(todo){
+            todo.done = !todo.done;
+        }
+        hasChanged = true;
+    }
+if (event.target.classList.contains("btn-edit")) {
+    const todo = todos.find(t => t.id === id);
+    if (todo) {
+        todo.isEditing = true; 
+    }
+    hasChanged = true;
 }
+if(hasChanged){
+    saveToDisk();
+    render();
+}
+})
 clear.addEventListener("click", () => {
 todos = todos.filter(todo =>!todo.done);
 saveToDisk();
@@ -103,10 +186,15 @@ const adding = () => {
         alert("Already exists!");
         return;
     }
-    todos.push({text : plan, done : false});
+    todos.push({ id:crypto.randomUUID(), text : plan, done : false, isEditing : false});
     saveToDisk()
     input.value = ""; 
     render();
 }
+input.addEventListener("keydown", (event) => {
+    if (event.key === "Enter"){
+        adding();
+    }
+})
 addBtn.addEventListener("click", adding);
 render();
