@@ -3,10 +3,11 @@ console.log(document.body.innerHTML.includes("TODO-APP-PAGE"));
 let input = document.getElementById("input");
 let addBtn = document.getElementById("addBtn");
 let list = document.getElementById("list");
-let clear = document.getElementById("Clear");
+let clear = document.getElementById("clear");
 let all = document.getElementById("all");
 let active = document.getElementById("active");
 let completed = document.getElementById("completed");
+const form = document.getElementById("todoForm");
 let currentFilter =localStorage.getItem("todoFilter") || "all";
 let stats = document.getElementById("stats");
 if (!input || !addBtn || !list || !clear || !all || !active || !completed || !stats) {
@@ -127,6 +128,7 @@ editBtn.classList.add("btn-edit");
     }
           list.appendChild(newItem);
 }); }
+todoForm.addEventListener("submit", (e) => { e.preventDefault(); adding(); });
 list.addEventListener("click",(event) => {
     let hasChanged = false;
     const li = event.target.closest("li");
@@ -191,10 +193,5 @@ const adding = () => {
     input.value = ""; 
     render();
 }
-input.addEventListener("keydown", (event) => {
-    if (event.key === "Enter"){
-        adding();
-    }
-})
 addBtn.addEventListener("click", adding);
 render();
