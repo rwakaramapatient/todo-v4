@@ -7,7 +7,8 @@ let clear = document.getElementById("clear");
 let all = document.getElementById("all");
 let active = document.getElementById("active");
 let completed = document.getElementById("completed");
-const form = document.getElementById("todoForm");
+let form = document.getElementById("todoForm");
+let searchBar = document.getElementById("searchBar");
 let currentFilter =localStorage.getItem("todoFilter") || "all";
 let stats = document.getElementById("stats");
 if (!input || !addBtn || !list || !clear || !all || !active || !completed || !stats) {
@@ -39,9 +40,9 @@ const saveToDisk = () =>{
    const stringifiedData = JSON.stringify(todos);
    localStorage.setItem("myTodos",stringifiedData);
 }
-
-function render() {
-
+let currentSearchTerm = "";
+function render(dataToFlow = todos) {
+    dataToFlow = todos.filter(t => t.text.toLowerCase().includes(currentSearchTerm));
 let filteredList;
 all.classList.remove("selected");
 active.classList.remove("selected");
@@ -52,18 +53,18 @@ if (currentFilter === "active") active.classList.add("selected");
 if (currentFilter === "completed") completed.classList.add("selected");
 switch (currentFilter) {
     case "active": 
-        filteredList = todos.filter(t => t.done !== true);;
+        filteredList = dataToFlow.filter(t => t.done !== true);;
         break;
 case "completed" :
-    filteredList = todos.filter(t => t.done === true);
+    filteredList = dataToFlow.filter(t => t.done === true);
     break;
     default:
-        filteredList = todos;
+        filteredList = dataToFlow;
         break;
 }
-const allStats= todos.length;
-  const completedStats= todos.filter(t => t.done).length;;
-const activeStats = todos.filter(t => !t.done).length;
+const allStats= dataToFlow.length;
+  const completedStats= dataToFlow.filter(t => t.done).length;;
+const activeStats = dataToFlow.filter(t => !t.done).length;
 stats.textContent = `Total = ${allStats}   Active : ${activeStats}  Completed : ${completedStats}`;   
 list.textContent = "";
 filteredList.forEach(task => {
@@ -157,6 +158,10 @@ if(hasChanged){
     render();
 }
 })
+searchBar.addEventListener("input", () => {
+currentSearchTerm = searchBar.value.toLowerCase();
+render();
+})
 clear.addEventListener("click", () => {
 todos = todos.filter(todo =>!todo.done);
 saveToDisk();
@@ -193,5 +198,3 @@ const adding = () => {
     input.value = ""; 
     render();
 }
-addBtn.addEventListener("click", adding);
-render();
