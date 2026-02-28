@@ -11,7 +11,7 @@ let form = document.getElementById("todoForm");
 let searchBar = document.getElementById("searchBar");
 let currentFilter =localStorage.getItem("todoFilter") || "all";
 let stats = document.getElementById("stats");
-if (!input || !addBtn || !list || !clear || !all || !active || !completed || !stats) {
+if (!input || !addBtn || !list || !clear || !all || !active || !completed || !stats || !form || !searchBar) {
   throw new Error("Missing element");
 }
 let todos = JSON.parse(localStorage.getItem("myTodos")) || [];
@@ -35,15 +35,14 @@ todos = todos.map(t => {
 
     return t; 
 });
-
 const saveToDisk = () =>{
    const stringifiedData = JSON.stringify(todos);
    localStorage.setItem("myTodos",stringifiedData);
 }
 let currentSearchTerm = "";
-function render(dataToFlow = todos) {
-    dataToFlow = todos.filter(t => t.text.toLowerCase().includes(currentSearchTerm));
-let filteredList;
+function render() {
+    const searchedLIst = todos.filter(t => t.text.toLowerCase().includes(currentSearchTerm.toLowerCase()));
+let filteredList = [];
 all.classList.remove("selected");
 active.classList.remove("selected");
 completed.classList.remove("selected");
@@ -53,40 +52,48 @@ if (currentFilter === "active") active.classList.add("selected");
 if (currentFilter === "completed") completed.classList.add("selected");
 switch (currentFilter) {
     case "active": 
-        filteredList = dataToFlow.filter(t => t.done !== true);;
+        filteredList = searchedLIst.filter(t => t.done !== true);;
         break;
 case "completed" :
-    filteredList = dataToFlow.filter(t => t.done === true);
+    filteredList = searchedLIst.filter(t => t.done === true);
     break;
     default:
-        filteredList = dataToFlow;
+        filteredList = searchedLIst;
         break;
 }
-const allStats= dataToFlow.length;
-  const completedStats= dataToFlow.filter(t => t.done).length;;
-const activeStats = dataToFlow.filter(t => !t.done).length;
+const allStats= todos.length;
+  const completedStats= todos.filter(t => t.done).length;;
+const activeStats = todos.filter(t => !t.done).length;
 stats.textContent = `Total = ${allStats}   Active : ${activeStats}  Completed : ${completedStats}`;   
 list.textContent = "";
+
+    if (filteredList.length === 0) {
+        const emptyItem = document.createElement("li");
+        emptyItem.textContent = currentSearchTerm
+            ? `No result found for "${currentSearchTerm}"`
+            : "No tasks yet";
+        list.appendChild(emptyItem);
+        return;
+    }
 filteredList.forEach(task => {
 const newItem = document.createElement("li");
         newItem.dataset.id = task.id; 
     if (task.isEditing){
         const editInput = document.createElement("input");
-        let isSaving = false;
-const saveEdit = () => {
+         editInput.value = task.text;
+         editInput.classList.add("edit-input");
+         const saveEdit = () => {
     const nextText = editInput.value.trim();
 
 if (nextText === "") {
   task.isEditing = false;
-  saveToDisk();
   render();
   return;
 }
-
-if (todos.some(t => t.id !== task.id && t.text === nextText)) {
+const normalizedNextText = nextText.toLowerCase();
+if (todos.some(t => t.id !== task.id && t.text.trim().toLowerCase() === normalizedNextText)) {
   alert("Already exists!");
-  isSaving = false; // stay in edit mode and allow retry
-  editInput.focus();
+    editInput.focus();
   return;
 }
 
@@ -95,18 +102,26 @@ task.isEditing = false;
 saveToDisk();
 render();
 }
+        setTimeout(() => {
+            editInput.focus();
+        }, 0);
+let cancelled = false;
 
-editInput.addEventListener("keydown",(event) => {
-    if (event.key === "Enter")
-    saveEdit();
-})
-editInput.addEventListener("blur",() => {
-    saveEdit();
-})
-        editInput.value = task.text;
-        editInput.classList.add("edit-input");
-        newItem.appendChild(editInput);
-    }
+  editInput.addEventListener("keydown", (event) => {
+                if (event.key === "Enter") saveEdit();
+                if (event.key === "Escape") {
+                    cancelled = true;
+                    task.isEditing = false;
+                    render();
+                }
+            });
+
+            editInput.addEventListener("blur",() =>{ 
+                if(cancelled) return;
+                saveEdit();
+            });
+
+            newItem.appendChild(editInput);}
     else{
     const newButton = document.createElement("button");
      const span = document.createElement("span");
@@ -128,8 +143,10 @@ editBtn.classList.add("btn-edit");
           newItem.appendChild(dltBtn);
     }
           list.appendChild(newItem);
-}); }
-todoForm.addEventListener("submit", (e) => { e.preventDefault(); adding(); });
+    
+}); 
+}
+form.addEventListener("submit", (e) => { e.preventDefault(); adding(); });
 list.addEventListener("click",(event) => {
     let hasChanged = false;
     const li = event.target.closest("li");
@@ -159,7 +176,7 @@ if(hasChanged){
 }
 })
 searchBar.addEventListener("input", () => {
-currentSearchTerm = searchBar.value.toLowerCase();
+currentSearchTerm = searchBar.value.toLowerCase().trim();
 render();
 })
 clear.addEventListener("click", () => {
@@ -189,7 +206,8 @@ const adding = () => {
     if (input.value.trim() === "") {
         return;
     }
-    if (todos.some(t => t.text === plan)){
+    const normalizedPlan = plan.toLowerCase();
+    if (todos.some(t => t.text.toLowerCase().trim()=== normalizedPlan)){
         alert("Already exists!");
         return;
     }
@@ -198,3 +216,4 @@ const adding = () => {
     input.value = ""; 
     render();
 }
+    render();
